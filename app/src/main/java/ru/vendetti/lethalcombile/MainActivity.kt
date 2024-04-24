@@ -1,7 +1,6 @@
 package ru.vendetti.lethalcombile
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.border
@@ -12,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,7 +20,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.toArgb
@@ -45,7 +43,6 @@ class MainActivity : ComponentActivity() {
         setContent { LoginAppScreen() }
     }
 }
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LoginAppScreen(){
     LethalCombileTheme {
@@ -62,11 +59,11 @@ fun LoginAppScreen(){
                     var text by remember { mutableStateOf("")}  // Состояние для хранения введённого текста
                     val keyboardController = LocalSoftwareKeyboardController.current
                     Text("[WELCOME]\n", color = LethalTerminalText, fontSize = 32.sp)
-                    Divider(color = LethalTerminalText)
+                    HorizontalDivider(color = LethalTerminalText)
                     Text("\nPls register or login before starting the game.\nYou can do it by typing:\n", color = LethalTerminalText, fontSize = 20.sp)
                     Text("register <nickname>\n> Enter password: <password>\n> Repeat password: <password>\n", color = LethalTerminalTextDark, fontSize = 16.sp)
                     Text("login <nickname>\n> Enter password: <password>\n", color = LethalTerminalTextDark, fontSize = 16.sp)
-                    Divider(color = LethalTerminalText)
+                    HorizontalDivider(color = LethalTerminalText)
                     Text("\nYou can type your command right below:", color = LethalTerminalText, fontSize = 20.sp)
                     BasicTextField(
                         value = text,
