@@ -8,9 +8,11 @@ import android.util.Patterns
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -25,6 +27,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
@@ -40,6 +44,7 @@ import ru.vendetti.lethalcombile.ui.theme.LethalTerminalBorder
 import ru.vendetti.lethalcombile.ui.theme.LethalTerminalRed
 import ru.vendetti.lethalcombile.ui.theme.LethalTerminalText
 import ru.vendetti.lethalcombile.ui.theme.LethalTerminalTextDark
+import ru.vendetti.lethalcombile.ui.theme.LethalTerminalWhite
 import kotlin.system.exitProcess
 
 class MainActivity : ComponentActivity() {
@@ -60,8 +65,10 @@ class MainActivity : ComponentActivity() {
     fun LoginAppScreen() {
         var errorText by remember { mutableStateOf("") }
         var text by remember { mutableStateOf("") }  // Состояние для хранения введённого текста
+        val focusRequester = remember { FocusRequester() }
         val keyboardController = LocalSoftwareKeyboardController.current
         LaunchedEffect(Unit) {
+            focusRequester.requestFocus()
             keyboardController?.show()
         }
         LethalCombileTheme {
@@ -71,14 +78,18 @@ class MainActivity : ComponentActivity() {
                         .border(30.dp, LethalTerminalBorder)
                         .padding(30.dp)
                         .fillMaxSize()
+                        .clickable(onClick = {
+                            keyboardController?.show()
+                        })
+                    //.focusRequester(focusRequester)
                 ) {
                     Column(
                         modifier = Modifier.padding(20.dp)
                     ) {
-                        Text("[WELCOME]\n", color = LethalTerminalText, fontSize = 25.sp)
+                        Text("[WELCOME]", color = LethalTerminalText, fontSize = 25.sp)
                         HorizontalDivider(color = LethalTerminalText)
                         Text(
-                            "\nRegister or login before starting the game. You can do it by typing:",
+                            "Register or login before starting the game. You can do it by typing:",
                             color = LethalTerminalText,
                             fontSize = 20.sp
                         )
@@ -88,23 +99,22 @@ class MainActivity : ComponentActivity() {
                             fontSize = 16.sp
                         )
                         Text(
-                            "login <email> <password>\n",
+                            "login <email> <password>",
                             color = LethalTerminalTextDark,
                             fontSize = 16.sp
                         )
                         HorizontalDivider(color = LethalTerminalText)
                         Text(
-                            "\nAll available commands:",
-                            color = LethalTerminalText,
-                            fontSize = 20.sp
+                            "All available commands:", color = LethalTerminalText, fontSize = 20.sp
                         )
                         Text(
                             "register\nlogin\nlogout\nexit",
                             color = LethalTerminalTextDark,
                             fontSize = 16.sp
                         )
+                        HorizontalDivider(color = LethalTerminalText)
                         Text(
-                            "\nYou can type your command right below:",
+                            "You can type your command right below:",
                             color = LethalTerminalText,
                             fontSize = 20.sp
                         )
@@ -113,11 +123,13 @@ class MainActivity : ComponentActivity() {
                             value = text,
                             onValueChange = { text = it },
                             singleLine = true,
-                            textStyle = TextStyle(color = LethalTerminalText, fontSize = 20.sp),
+                            textStyle = TextStyle(color = LethalTerminalWhite, fontSize = 20.sp),
                             cursorBrush = SolidColor(LethalTerminalText),
                             modifier = Modifier
-                                .padding(top = 30.dp)
-                                .fillMaxSize(),
+                                //.padding(top = 20.dp)
+                                //.fillMaxSize(),
+                                .height(30.dp)
+                                .focusRequester(focusRequester),
                             keyboardOptions = KeyboardOptions.Default.copy(
                                 imeAction = ImeAction.Done
                             ),
@@ -183,33 +195,31 @@ class MainActivity : ComponentActivity() {
 
     private fun register(email: String, password: String, setErrorText: (String) -> Unit) {
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    currentUser = auth.currentUser
-                    setErrorText("Successful")
-                } else {
-                    setErrorText("Register error")
-                }
+            if (task.isSuccessful) {
+                currentUser = auth.currentUser
+                setErrorText("Successful")
+            } else {
+                setErrorText("Register error")
             }
+        }
     }
 
     private fun login(email: String, password: String, setErrorText: (String) -> Unit) {
         auth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    currentUser = auth.currentUser
-                    setErrorText("Successful")
-                    //reload()
-                    //updateUI(user)
-                } else {
-                    setErrorText("Login error")
-                }
+            if (task.isSuccessful) {
+                currentUser = auth.currentUser
+                setErrorText("Successful")
+            } else {
+                setErrorText("Login error")
             }
+        }
     }
 
     private fun logout(setErrorText: (String) -> Unit) {
         if (currentUser == null) {
             setErrorText("You're not logged in")
         } else {
-            Firebase.auth.signOut()
+            auth.signOut()
             currentUser = auth.currentUser
             setErrorText("Logged out")
         }
