@@ -2,7 +2,10 @@
 
 package ru.vendetti.lethalcombile
 
+import android.media.SoundPool
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.TextUtils
 import android.util.Patterns
 import androidx.activity.ComponentActivity
@@ -50,6 +53,8 @@ import kotlin.system.exitProcess
 class MainActivity : ComponentActivity() {
     private var auth: FirebaseAuth = Firebase.auth
     private var currentUser = auth.currentUser
+    private var soundPool: SoundPool? = null
+    private val soundIds = IntArray(8)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onStart()
         // Check if user is signed in (non-null) and update UI accordingly.
@@ -58,6 +63,20 @@ class MainActivity : ComponentActivity() {
         //} else {
         super.onCreate(savedInstanceState)
         setContent { LoginAppScreen() }
+        soundPool = SoundPool.Builder().setMaxStreams(1).build()
+        soundIds[0] = soundPool!!.load(this, R.raw.tap1, 1)
+        soundIds[1] = soundPool!!.load(this, R.raw.tap2, 1)
+        soundIds[2] = soundPool!!.load(this, R.raw.tap3, 1)
+        soundIds[3] = soundPool!!.load(this, R.raw.delete, 1)
+        soundIds[4] = soundPool!!.load(this, R.raw.termopen, 1)
+        soundIds[5] = soundPool!!.load(this, R.raw.termclose, 1)
+        soundIds[6] = soundPool!!.load(this, R.raw.success, 1)
+        soundIds[7] = soundPool!!.load(this, R.raw.error, 1)
+        soundPool!!.setOnLoadCompleteListener { soundPool, _, status ->
+            if (status == 0) {
+                soundPool?.play(soundIds[4], 1F, 1F, 1, 0, 1F)
+            }
+        }
         //}
     }
 
@@ -121,7 +140,7 @@ class MainActivity : ComponentActivity() {
                         Text(errorText, color = LethalTerminalRed, fontSize = 20.sp)
                         BasicTextField(
                             value = text,
-                            onValueChange = { text = it },
+                            onValueChange = { text = it; playkeyboardSound() },
                             singleLine = true,
                             textStyle = TextStyle(color = LethalTerminalWhite, fontSize = 20.sp),
                             cursorBrush = SolidColor(LethalTerminalText),
@@ -149,14 +168,22 @@ class MainActivity : ComponentActivity() {
         text: String, setErrorText: (String) -> Unit
     ) {
         when (text.trim().split(" ")[0]) {
-            "exit" -> exitProcess(-1)
+            "exit" -> exitApp()
             "login" -> checkLogin(text, setErrorText)
             "register" -> checkRegister(text, setErrorText)
             "logout" -> logout(setErrorText)
             else -> {
                 setErrorText("This command doesn't exist!")
+                soundPool?.play(soundIds[7], 1F, 1F, 1, 0, 1F)
             }
         }
+    }
+
+    private fun exitApp(){
+        soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
+        Handler(Looper.getMainLooper()).postDelayed({
+            exitProcess(-1)
+        }, 500)
     }
 
     private fun checkLogin(text: String, setErrorText: (String) -> Unit) {
@@ -167,9 +194,11 @@ class MainActivity : ComponentActivity() {
                 login(parts[1], parts[2], setErrorText)
             } else {
                 setErrorText("Incorrect email/passwd (len must be > 5 chars)")
+                soundPool?.play(soundIds[7], 1F, 1F, 1, 0, 1F)
             }
         } else {
             setErrorText("Wrong syntax")
+            soundPool?.play(soundIds[7], 1F, 1F, 1, 0, 1F)
         }
     }
 
@@ -181,9 +210,11 @@ class MainActivity : ComponentActivity() {
                 register(parts[1], parts[2], setErrorText)
             } else {
                 setErrorText("Incorrect email/passwd (len must be > 5 chars)")
+                soundPool?.play(soundIds[7], 1F, 1F, 1, 0, 1F)
             }
         } else {
             setErrorText("Wrong syntax")
+            soundPool?.play(soundIds[7], 1F, 1F, 1, 0, 1F)
         }
     }
 
@@ -198,8 +229,10 @@ class MainActivity : ComponentActivity() {
             if (task.isSuccessful) {
                 currentUser = auth.currentUser
                 setErrorText("Successful")
+                soundPool?.play(soundIds[6], 1F, 1F, 1, 0, 1F)
             } else {
                 setErrorText("Register error")
+                soundPool?.play(soundIds[7], 1F, 1F, 1, 0, 1F)
             }
         }
     }
@@ -209,8 +242,10 @@ class MainActivity : ComponentActivity() {
             if (task.isSuccessful) {
                 currentUser = auth.currentUser
                 setErrorText("Successful")
+                soundPool?.play(soundIds[6], 1F, 1F, 1, 0, 1F)
             } else {
                 setErrorText("Login error")
+                soundPool?.play(soundIds[7], 1F, 1F, 1, 0, 1F)
             }
         }
     }
@@ -218,10 +253,16 @@ class MainActivity : ComponentActivity() {
     private fun logout(setErrorText: (String) -> Unit) {
         if (currentUser == null) {
             setErrorText("You're not logged in")
+            soundPool?.play(soundIds[7], 1F, 1F, 1, 0, 1F)
         } else {
             auth.signOut()
             currentUser = auth.currentUser
             setErrorText("Logged out")
+            soundPool?.play(soundIds[6], 1F, 1F, 1, 0, 1F)
         }
+    }
+    private fun playkeyboardSound(){
+        val rnds = (0..3).random()
+        soundPool?.play(soundIds[rnds], 1F, 1F, 0, 0, 1F)
     }
 }
