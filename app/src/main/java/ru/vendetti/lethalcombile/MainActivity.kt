@@ -2,6 +2,7 @@
 
 package ru.vendetti.lethalcombile
 
+import android.media.MediaPlayer
 import android.media.SoundPool
 import android.os.Bundle
 import android.os.Handler
@@ -55,6 +56,8 @@ class MainActivity : ComponentActivity() {
     private var currentUser = auth.currentUser
     private var soundPool: SoundPool? = null
     private val soundIds = IntArray(8)
+    private lateinit var mediaPlayer1: MediaPlayer
+    private lateinit var mediaPlayer2: MediaPlayer
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onStart()
         // Check if user is signed in (non-null) and update UI accordingly.
@@ -77,7 +80,22 @@ class MainActivity : ComponentActivity() {
                 soundPool?.play(soundIds[4], 1F, 1F, 1, 0, 1F)
             }
         }
+        mediaPlayer1 = MediaPlayer.create(this, R.raw.ambient)
+        mediaPlayer2 = MediaPlayer.create(this, R.raw.ambient)
+        mediaPlayer1.isLooping = false
+        mediaPlayer2.isLooping = false
+        mediaPlayer1.setVolume(0.6F, 0.6F)
+        mediaPlayer2.setVolume(0.6F, 0.6F)
+        mediaPlayer1.start()
+        musicFun1()
         //}
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mediaPlayer1.release()
+        mediaPlayer2.release()
+        soundPool?.release()
     }
 
     @Composable
@@ -179,7 +197,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun exitApp(){
+    private fun musicFun1() {
+        Handler(Looper.getMainLooper()).postDelayed({
+            mediaPlayer2.start()
+            musicFun2()
+        }, 16000)
+    }
+
+    private fun musicFun2() {
+        Handler(Looper.getMainLooper()).postDelayed({
+            mediaPlayer1.start()
+            musicFun1()
+        }, 16000)
+    }
+
+    private fun exitApp() {
         soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
         Handler(Looper.getMainLooper()).postDelayed({
             exitProcess(-1)
@@ -261,8 +293,9 @@ class MainActivity : ComponentActivity() {
             soundPool?.play(soundIds[6], 1F, 1F, 1, 0, 1F)
         }
     }
-    private fun playkeyboardSound(){
+
+    private fun playkeyboardSound() {
         val rnds = (0..3).random()
-        soundPool?.play(soundIds[rnds], 1F, 1F, 0, 0, 1F)
+        soundPool?.play(soundIds[rnds], 0.7F, 0.7F, 0, 0, 1F)
     }
 }
