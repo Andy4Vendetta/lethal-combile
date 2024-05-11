@@ -13,8 +13,8 @@ android {
         applicationId = "ru.vendetti.lethalcombile"
         minSdk = 33
         targetSdk = 34
-        versionCode = 2
-        versionName = "0.2 alpha"
+        versionCode = 3
+        versionName = "0.3 alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -69,4 +69,5 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-database")
 }

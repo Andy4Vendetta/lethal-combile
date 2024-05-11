@@ -48,11 +48,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ru.vendetti.lethalcombile.ui.theme.LethalCombileTheme
-import ru.vendetti.lethalcombile.ui.theme.LethalTerminalBack
-import ru.vendetti.lethalcombile.ui.theme.LethalTerminalBorder
-import ru.vendetti.lethalcombile.ui.theme.LethalTerminalRed
+import ru.vendetti.lethalcombile.ui.theme.LethalTerminalBackOrange
+import ru.vendetti.lethalcombile.ui.theme.LethalTerminalBackOrange2
+import ru.vendetti.lethalcombile.ui.theme.LethalTerminalOrange
 import ru.vendetti.lethalcombile.ui.theme.LethalTerminalText
-import ru.vendetti.lethalcombile.ui.theme.LethalTerminalTextDark
+import ru.vendetti.lethalcombile.ui.theme.LethalTerminalTextDarkOrange
 import ru.vendetti.lethalcombile.ui.theme.LethalTerminalWhite
 import kotlin.system.exitProcess
 
@@ -66,8 +66,7 @@ class MainActivity : ComponentActivity() {
     private val soundIds = IntArray(8)
 
     //Для фоновой музыки
-    private lateinit var mediaPlayer1: MediaPlayer
-    private lateinit var mediaPlayer2: MediaPlayer
+    private lateinit var mediaPlayer: MediaPlayer
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         super.onStart()
@@ -75,8 +74,10 @@ class MainActivity : ComponentActivity() {
         if (currentUser != null) {
             switchActivity(false)
         } else {
-            //Отрисовываем экран
             setContent { LoginAppScreen() }
+            mediaPlayer = MediaPlayer.create(this, R.raw.menu)
+            mediaPlayer.isLooping = true
+            mediaPlayer.setVolume(1F, 1F)
             //Инициируем пул звуков и предзагружаем их
             soundPool = SoundPool.Builder().setMaxStreams(3).build()
             soundIds[0] = soundPool!!.load(this, R.raw.tap1, 1)
@@ -87,21 +88,15 @@ class MainActivity : ComponentActivity() {
             soundIds[5] = soundPool!!.load(this, R.raw.termclose, 1)
             soundIds[6] = soundPool!!.load(this, R.raw.success, 1)
             soundIds[7] = soundPool!!.load(this, R.raw.error, 1)
-            //После загрузки звуков проигрываем звук открытия терминала
             soundPool!!.setOnLoadCompleteListener { soundPool, _, status ->
                 if (status == 0) {
-                    soundPool?.play(soundIds[4], 0.8F, 0.8F, 1, 0, 1F)
+                    soundPool?.play(soundIds[4], 1F, 1F, 1, 0, 1F)
                 }
             }
-            //Настраиваем систему асинхронного цикличного бесшовного воспроизведения фоновой музыки
-            mediaPlayer1 = MediaPlayer.create(this, R.raw.ambient)
-            mediaPlayer1.isLooping = false
-            mediaPlayer1.setVolume(0.6F, 0.6F)
-            mediaPlayer2 = MediaPlayer.create(this, R.raw.ambient)
-            mediaPlayer2.isLooping = false
-            mediaPlayer2.setVolume(0.6F, 0.6F)
-            //Запускаем цикл фоновой музыки, дальше он поддерживает сам себя до кончины активити
-            musicFun1()
+            CoroutineScope(Dispatchers.Main).launch {
+                delay(600)
+                mediaPlayer.start()
+            }
         }
     }
 
@@ -121,70 +116,80 @@ class MainActivity : ComponentActivity() {
         }
         //Вообще вся разметка Jetpack Compose
         LethalCombileTheme {
-            Surface(modifier = Modifier.fillMaxSize(), color = LethalTerminalBack) {
-                Box(
-                    modifier = Modifier
-                        .border(30.dp, LethalTerminalBorder)
-                        .padding(30.dp)
-                        .fillMaxSize()
-                        .clickable(onClick = {
-                            keyboardController?.show()
-                        })
+            Surface(
+                modifier = Modifier.fillMaxSize(), color = LethalTerminalBackOrange2
+            ) {
+                Surface(
+                    modifier = Modifier.padding(30.dp), color = LethalTerminalBackOrange
                 ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp)
-                    ) {
-                        Text("[WELCOME]", color = LethalTerminalText, fontSize = 25.sp)
-                        HorizontalDivider(color = LethalTerminalText)
-                        Text(
-                            "Register or login before starting the game. You can do it by typing:",
-                            color = LethalTerminalText,
-                            fontSize = 20.sp
-                        )
-                        Text(
-                            "register <emal> <password> <password>\n",
-                            color = LethalTerminalTextDark,
-                            fontSize = 16.sp
-                        )
-                        Text(
-                            "login <email> <password>",
-                            color = LethalTerminalTextDark,
-                            fontSize = 16.sp
-                        )
-                        HorizontalDivider(color = LethalTerminalText)
-                        Text(
-                            "All available commands:", color = LethalTerminalText, fontSize = 20.sp
-                        )
-                        Text(
-                            "register\nlogin\nlogout\nexit",
-                            color = LethalTerminalTextDark,
-                            fontSize = 16.sp
-                        )
-                        HorizontalDivider(color = LethalTerminalText)
-                        Text(
-                            "You can type your command right below:",
-                            color = LethalTerminalText,
-                            fontSize = 20.sp
-                        )
-                        Text(errorText, color = LethalTerminalRed, fontSize = 20.sp)
-                        BasicTextField(
-                            value = text,
-                            onValueChange = { text = it; playkeyboardSound() },
-                            singleLine = true,
-                            textStyle = TextStyle(color = LethalTerminalWhite, fontSize = 20.sp),
-                            cursorBrush = SolidColor(LethalTerminalText),
-                            modifier = Modifier
-                                .height(30.dp)
-                                .focusRequester(focusRequester),
-                            keyboardOptions = KeyboardOptions.Default.copy(
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(onDone = {
-                                executeCommand(text) { newErrorText ->
-                                    errorText = newErrorText
-                                }
+                    Box(
+                        modifier = Modifier
+                            .border(3.dp, LethalTerminalOrange)
+                            .padding(15.dp)
+                            .fillMaxSize()
+                            .clickable(onClick = {
+                                keyboardController?.show()
                             })
-                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(20.dp)
+                        ) {
+                            Text("[WELCOME]", color = LethalTerminalOrange, fontSize = 25.sp)
+                            HorizontalDivider(color = LethalTerminalOrange)
+                            Text(
+                                "Register or login before starting the game. You can do it by typing:",
+                                color = LethalTerminalOrange,
+                                fontSize = 20.sp
+                            )
+                            Text(
+                                "register <emal> <password> <password>",
+                                color = LethalTerminalTextDarkOrange,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                "login <email> <password>",
+                                color = LethalTerminalTextDarkOrange,
+                                fontSize = 16.sp
+                            )
+                            HorizontalDivider(color = LethalTerminalOrange)
+                            Text(
+                                "All available commands:",
+                                color = LethalTerminalOrange,
+                                fontSize = 20.sp
+                            )
+                            Text(
+                                "register\nlogin\nexit",
+                                color = LethalTerminalTextDarkOrange,
+                                fontSize = 16.sp
+                            )
+                            HorizontalDivider(color = LethalTerminalOrange)
+                            Text(
+                                "You can type your command right below:",
+                                color = LethalTerminalOrange,
+                                fontSize = 20.sp
+                            )
+                            Text(errorText, color = LethalTerminalText, fontSize = 20.sp)
+                            BasicTextField(
+                                value = text,
+                                onValueChange = { text = it; playkeyboardSound() },
+                                singleLine = true,
+                                textStyle = TextStyle(
+                                    color = LethalTerminalWhite, fontSize = 20.sp
+                                ),
+                                cursorBrush = SolidColor(LethalTerminalOrange),
+                                modifier = Modifier
+                                    .height(30.dp)
+                                    .focusRequester(focusRequester),
+                                keyboardOptions = KeyboardOptions.Default.copy(
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(onDone = {
+                                    executeCommand(text) { newErrorText ->
+                                        errorText = newErrorText
+                                    }
+                                })
+                            )
+                        }
                     }
                 }
             }
@@ -199,7 +204,6 @@ class MainActivity : ComponentActivity() {
             "exit" -> exitApp()
             "login" -> checkLogin(text, setErrorText)
             "register" -> checkRegister(text, setErrorText)
-            "logout" -> logout(setErrorText)
             else -> {
                 setErrorText("This command doesn't exist!")
                 soundPool?.play(soundIds[7], 1F, 1F, 1, 0, 1F)
@@ -207,31 +211,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    //Функции для бесшовного воспроизведения зацикленного эмбиента
-    private fun musicFun1() {
-        CoroutineScope(Dispatchers.Main).launch {
-            mediaPlayer1.start()
-            delay(16000)
-            if (isActivityActive()) {
-                musicFun2()
-            }
-        }
-    }
-
-    private fun musicFun2() {
-        CoroutineScope(Dispatchers.Main).launch {
-            mediaPlayer2.start()
-            delay(16000)
-            if (isActivityActive()) {
-                musicFun1()
-            }
-        }
-    }
-
     //Функция для асинхронного выхода из приложения
     private fun exitApp() {
-        soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
         CoroutineScope(Dispatchers.Main).launch {
+            soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
             delay(500)
             exitProcess(-1)
         }
@@ -306,24 +289,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    //Функция выхода из аккаунта. В будущем вероятно будет удалена за ненадобностью
-    private fun logout(setErrorText: (String) -> Unit) {
-        if (currentUser == null) {
-            setErrorText("You're not logged in")
-            soundPool?.play(soundIds[7], 1F, 1F, 1, 0, 1F)
-        } else {
-            auth.signOut()
-            currentUser = auth.currentUser
-            setErrorText("Logged out")
-            soundPool?.play(soundIds[6], 1F, 1F, 1, 0, 1F)
-        }
-    }
-
     //Функция проигрывания звуков клавиатуры
     private fun playkeyboardSound() {
         CoroutineScope(Dispatchers.Main).launch {
             val rnds = (0..3).random()
-            soundPool?.play(soundIds[rnds], 0.7F, 0.7F, 0, 0, 1F)
+            soundPool?.play(soundIds[rnds], 0.8F, 0.8F, 0, 0, 1F)
         }
     }
 
@@ -332,8 +302,7 @@ class MainActivity : ComponentActivity() {
         if (mode) {
             Handler(Looper.getMainLooper()).postDelayed({
                 startActivity(Intent(this, GameActivity::class.java))
-                mediaPlayer1.release()
-                mediaPlayer2.release()
+                mediaPlayer.release()
                 soundPool?.release()
                 finish()
             }, 1000)
@@ -341,11 +310,5 @@ class MainActivity : ComponentActivity() {
             startActivity(Intent(this, GameActivity::class.java))
             finish()
         }
-
-    }
-
-    //Функция для борьбы с вылетами и исключениями, возникающими из-за некоторых асинхронных функций, пытающихся обратиться к тому, чего нет
-    private fun isActivityActive(): Boolean {
-        return !isDestroyed && !isFinishing
     }
 }
