@@ -26,7 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -69,6 +68,27 @@ class GameActivity : ComponentActivity() {
     //Для фоновой музыки
     private lateinit var mediaPlayer1: MediaPlayer
     private lateinit var mediaPlayer2: MediaPlayer
+
+    //Игровая информация
+    private var quoteNeeded = 126
+    private var quoteGained = 0
+    private var cash = 35
+    private var quoteDays = 3
+    private var quoteNum = 1
+
+    //Луны
+    private var selectedMoon = 1
+
+    //Магаз
+
+    //Строковая информация
+    private var upperPrompt = "All available commands:"
+    private var prompt =
+        "moons\n" + "store\n" + "start\n" + "logout\n" + "exit\n" + "help (this message)"
+
+    //Мутаблы
+    private var upperPromptState = mutableStateOf(upperPrompt)
+    private var promptState = mutableStateOf(prompt)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         super.onStart()
@@ -104,13 +124,6 @@ class GameActivity : ComponentActivity() {
 
     //Функция для задания графики (и ее логики) активити
     @Composable
-    private fun ShipScreen() {
-        var quoteText by remember { mutableStateOf("") }
-        var quoteDays by remember { mutableIntStateOf(3) }
-    }
-
-    //Функция для задания графики (и ее логики) активити
-    @Composable
     fun TerminalScreen() {
         //Текст ответной информации, появляется как результат любого воздействия с терминалом
         var errorText by remember { mutableStateOf("") }
@@ -141,12 +154,16 @@ class GameActivity : ComponentActivity() {
                         Text("[WELCOME]", color = LethalTerminalText, fontSize = 25.sp)
                         HorizontalDivider(color = LethalTerminalText)
                         Text(
-                            "All available commands:", color = LethalTerminalText, fontSize = 20.sp
+                            "Profit quota: $quoteGained / $quoteNeeded\nDeadline: in $quoteDays days",
+                            color = LethalTerminalText,
+                            fontSize = 20.sp
+                        )
+                        HorizontalDivider(color = LethalTerminalText)
+                        Text(
+                            upperPromptState.value, color = LethalTerminalText, fontSize = 20.sp
                         )
                         Text(
-                            "moons (WIP)\nstore (WIP)\nlogout\nexit\nhelp (this message)",
-                            color = LethalTerminalTextDark,
-                            fontSize = 16.sp
+                            promptState.value, color = LethalTerminalTextDark, fontSize = 16.sp
                         )
                         HorizontalDivider(color = LethalTerminalText)
                         Text(
@@ -180,17 +197,92 @@ class GameActivity : ComponentActivity() {
     }
 
     //Просто гениальная реализация взаимодействия с терминалом, горжусь ей
-    private fun executeCommand(
-        text: String, setErrorText: (String) -> Unit
-    ) {
+    private fun executeCommand(text: String, setErrorText: (String) -> Unit) {
         when (text.trim().split(" ")[0]) {
-            "exit" -> exitApp()
+            "exit" -> exitApp(setErrorText)
             "logout" -> logout(setErrorText)
+            "start" -> start(selectedMoon, setErrorText)
+            "store" -> store()
+            "moons" -> moons()
+            "help" -> help()
+            "experimentation" -> selectMoon(0, setErrorText)
             else -> {
                 setErrorText("This command doesn't exist!")
                 soundPool?.play(soundIds[7], 1F, 1F, 1, 0, 1F)
             }
         }
+    }
+
+    //Функция смены выбранной планеты
+    private fun selectMoon(moon: Int, setErrorText: (String) -> Unit) {
+        var moonName = "Error"
+        when (moon) {
+            0 -> moonName = "Experimentation"
+            1 -> moonName = "Assurance"
+            2 -> moonName = "Vow"
+            3 -> moonName = "Offense"
+            4 -> moonName = "March"
+            5 -> moonName = "Adamance"
+            6 -> moonName = "Rend"
+            7 -> moonName = "Dine"
+            8 -> moonName = "Titan"
+            9 -> moonName = "Artifice"
+        }
+        soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
+        CoroutineScope(Dispatchers.Main).launch {
+            setErrorText("Flying to $moonName...")
+            soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
+            delay(5000)
+            setErrorText("You are at $moonName")
+            soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
+            selectedMoon = moon
+        }
+    }
+
+    //Функция магазина предметов
+    private fun store() {
+        upperPromptState.value = "Your balance: $cash\nAll available items:"
+        promptState.value = "Flashlight (WIP): 15\n" + "Shovel (WIP): 60\n" + "Boombox (WIP): 120"
+        soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
+    }
+
+    //Функция вызова списка команд
+    private fun help() {
+        upperPromptState.value = "All available commands:"
+        promptState.value =
+            "moons\n" + "store\n" + "start\n" + "logout\n" + "exit\n" + "help (this message)"
+        soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
+    }
+
+    //Функция выбора луны
+    private fun moons() {
+        upperPromptState.value = "All available moons:"
+        promptState.value =
+            "Experimentation\n" + "Assurance (WIP)\n" + "Vow (WIP)\n\n" + "Offense (WIP)\n" + "March (WIP)\n" + "Adamance (WIP)\n\n" + "Rend (WIP)\n" + "Dine (WIP)\n" + "Titan (WIP)"
+        soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
+    }
+
+    //Функция начала раунда
+    private fun start(moon: Int, setErrorText: (String) -> Unit) {
+        when (moon) {
+            0 -> switchActivity(0)
+            1 -> switchActivity(1)
+            2 -> switchActivity(2)
+            3 -> switchActivity(3)
+            4 -> switchActivity(4)
+            5 -> switchActivity(5)
+            6 -> switchActivity(6)
+            7 -> switchActivity(7)
+            8 -> switchActivity(8)
+            9 -> switchActivity(9)
+            else -> {
+                setErrorText("Selected moon index out of array!")
+                soundPool?.play(soundIds[7], 1F, 1F, 1, 0, 1F)
+                return
+            }
+        }
+        setErrorText("Landing...")
+        soundPool?.play(soundIds[8], 1F, 1F, 1, 0, 1F)
     }
 
     //Функции для бесшовного воспроизведения зацикленного эмбиента
@@ -219,16 +311,17 @@ class GameActivity : ComponentActivity() {
         CoroutineScope(Dispatchers.Main).launch {
             auth.signOut()
             currentUser = auth.currentUser
-            setErrorText("Logged out")
+            setErrorText("Logging out...")
             soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
             delay(500)
-            switchActivity()
+            switchActivity(10)
         }
     }
 
-    //Функция для асинхронного выхода из приложения
-    private fun exitApp() {
+    //Функция для выхода из приложения
+    private fun exitApp(setErrorText: (String) -> Unit) {
         CoroutineScope(Dispatchers.Main).launch {
+            setErrorText("Exiting app...")
             soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
             delay(500)
             exitProcess(-1)
@@ -242,14 +335,33 @@ class GameActivity : ComponentActivity() {
         }
     }
 
-    private fun switchActivity() {
-        Handler(Looper.getMainLooper()).postDelayed({
-            startActivity(Intent(this, MainActivity::class.java))
-            mediaPlayer1.release()
-            mediaPlayer2.release()
-            soundPool?.release()
-            finish()
-        }, 1000)
+    private fun switchActivity(mode: Int) {
+        when (mode) {
+            10 -> {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    startActivity(Intent(this, MainActivity::class.java))
+                    mediaPlayer1.release()
+                    mediaPlayer2.release()
+                    soundPool?.release()
+                    finish()
+                }, 1000)
+            }
+
+            in 0..9 -> {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    //ClickerActivity.moon = mode
+                    //startActivity(Intent(this, ClickerActivity::class.java))
+                    mediaPlayer1.release()
+                    mediaPlayer2.release()
+                    soundPool?.release()
+                    finish()
+                }, 5000)
+            }
+
+            else -> {
+                return
+            }
+        }
     }
 
     private fun isActivityActive(): Boolean {
