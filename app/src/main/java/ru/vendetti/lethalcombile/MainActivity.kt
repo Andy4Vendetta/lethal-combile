@@ -201,7 +201,7 @@ class MainActivity : ComponentActivity() {
         text: String, setErrorText: (String) -> Unit
     ) {
         when (text.trim().split(" ")[0]) {
-            "exit" -> exitApp()
+            "exit" -> exitApp(setErrorText)
             "login" -> checkLogin(text, setErrorText)
             "register" -> checkRegister(text, setErrorText)
             else -> {
@@ -212,8 +212,9 @@ class MainActivity : ComponentActivity() {
     }
 
     //Функция для асинхронного выхода из приложения
-    private fun exitApp() {
+    private fun exitApp(setErrorText: (String) -> Unit) {
         CoroutineScope(Dispatchers.Main).launch {
+            setErrorText("Exiting app...")
             soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
             delay(500)
             exitProcess(-1)
