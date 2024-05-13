@@ -55,6 +55,15 @@ import ru.vendetti.lethalcombile.ui.theme.LethalTerminalTextDark
 import ru.vendetti.lethalcombile.ui.theme.LethalTerminalWhite
 import kotlin.system.exitProcess
 
+data class UserData(
+    var cash: Int,
+    var quoteNeeded: Int,
+    var quoteGained: Int,
+    var quoteNum: Int,
+    var quoteDays: Int,
+    var selectedMoon: Int
+)
+
 class GameActivity : ComponentActivity() {
     //Подключаем систему авторизации и БД Firebase
     private var auth: FirebaseAuth = Firebase.auth
@@ -63,7 +72,7 @@ class GameActivity : ComponentActivity() {
 
     //Инициируем поля для звуковых эффектов
     private var soundPool: SoundPool? = null
-    private val soundIds = IntArray(9)
+    private val soundIds = IntArray(11)
 
     //Для фоновой музыки
     private lateinit var mediaPlayer1: MediaPlayer
@@ -77,7 +86,7 @@ class GameActivity : ComponentActivity() {
     private var quoteNum = 1
 
     //Луны
-    private var selectedMoon = 1
+    private var selectedMoon = 0
 
     //Магаз
 
@@ -92,6 +101,8 @@ class GameActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         super.onStart()
+        database.setPersistenceEnabled(true)
+        //getUserData()
         //Отрисовываем экран
         setContent { TerminalScreen() }
         //Инициируем пул звуков и предзагружаем их
@@ -105,6 +116,8 @@ class GameActivity : ComponentActivity() {
         soundIds[6] = soundPool!!.load(this, R.raw.success, 1)
         soundIds[7] = soundPool!!.load(this, R.raw.error, 1)
         soundIds[8] = soundPool!!.load(this, R.raw.lever, 1)
+        soundIds[9] = soundPool!!.load(this, R.raw.departure, 1)
+        soundIds[10] = soundPool!!.load(this, R.raw.arrival, 1)
         //После загрузки звуков проигрываем звук открытия терминала
         soundPool!!.setOnLoadCompleteListener { soundPool, _, status ->
             if (status == 0) {
@@ -206,6 +219,7 @@ class GameActivity : ComponentActivity() {
             "moons" -> moons()
             "help" -> help()
             "experimentation" -> selectMoon(0, setErrorText)
+            "assurance" -> selectMoon(1, setErrorText)
             else -> {
                 setErrorText("This command doesn't exist!")
                 soundPool?.play(soundIds[7], 1F, 1F, 1, 0, 1F)
@@ -228,13 +242,18 @@ class GameActivity : ComponentActivity() {
             8 -> moonName = "Titan"
             9 -> moonName = "Artifice"
         }
-        soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
+        if (selectedMoon == moon) {
+            soundPool?.play(soundIds[7], 1F, 1F, 1, 0, 1F)
+            setErrorText("You are already at $moonName!")
+            return
+        }
+        //soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
         CoroutineScope(Dispatchers.Main).launch {
             setErrorText("Flying to $moonName...")
-            soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
+            soundPool?.play(soundIds[9], 0.8F, 0.8F, 1, 0, 1F)
             delay(5000)
             setErrorText("You are at $moonName")
-            soundPool?.play(soundIds[5], 1F, 1F, 1, 0, 1F)
+            soundPool?.play(soundIds[10], 0.8F, 0.8F, 1, 0, 1F)
             selectedMoon = moon
         }
     }
@@ -366,5 +385,30 @@ class GameActivity : ComponentActivity() {
 
     private fun isActivityActive(): Boolean {
         return !isDestroyed && !isFinishing
+    }
+
+    fun saveUserData(data: UserData) {
+        val uid = auth.currentUser?.uid ?: return
+        val userRef = database.getReference("users").child(uid)
+        userRef.setValue(data).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                println("Data saved successfully.")
+            } else {
+                println("Failed to save data: ${task.exception}")
+            }
+        }
+    }
+
+    fun getUserData() {
+        val uid = auth.currentUser?.uid ?: return
+        val userRef = database.getReference("users").child(uid)
+        userRef.get().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val data = task.result?.getValue(UserData::class.java)
+                println("Retrieved data: $data")
+            } else {
+                println("Failed to retrieve data: ${task.exception}")
+            }
+        }
     }
 }
