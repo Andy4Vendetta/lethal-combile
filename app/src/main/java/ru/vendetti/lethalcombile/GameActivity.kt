@@ -87,6 +87,7 @@ class GameActivity : ComponentActivity() {
 
     //Луны
     private var selectedMoon = 0
+    private var moonName = "Experimentation"
 
     //Магаз
 
@@ -167,7 +168,7 @@ class GameActivity : ComponentActivity() {
                         Text("[WELCOME]", color = LethalTerminalText, fontSize = 25.sp)
                         HorizontalDivider(color = LethalTerminalText)
                         Text(
-                            "Profit quota: $quoteGained / $quoteNeeded\nDeadline: in $quoteDays days",
+                            "Profit quota: $quoteGained / $quoteNeeded\nDeadline: in $quoteDays days\nMoon: $moonName",
                             color = LethalTerminalText,
                             fontSize = 20.sp
                         )
@@ -229,7 +230,6 @@ class GameActivity : ComponentActivity() {
 
     //Функция смены выбранной планеты
     private fun selectMoon(moon: Int, setErrorText: (String) -> Unit) {
-        var moonName = "Error"
         when (moon) {
             0 -> moonName = "Experimentation"
             1 -> moonName = "Assurance"
