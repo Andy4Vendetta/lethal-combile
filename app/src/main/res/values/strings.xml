@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Lethal Combile</string>
     <string name="title_activity_game">GameActivity</string>
+    <string name="title_activity_clicker">ClickerActivity</string>
 </resources>

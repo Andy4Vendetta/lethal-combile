@@ -138,7 +138,7 @@ class GameActivity : ComponentActivity() {
 
     //Функция для задания графики (и ее логики) активити
     @Composable
-    fun TerminalScreen() {
+    private fun TerminalScreen() {
         //Текст ответной информации, появляется как результат любого воздействия с терминалом
         var errorText by remember { mutableStateOf("") }
         //Состояние для хранения введённого текста
@@ -369,7 +369,11 @@ class GameActivity : ComponentActivity() {
             in 0..9 -> {
                 Handler(Looper.getMainLooper()).postDelayed({
                     //ClickerActivity.moon = mode
-                    //startActivity(Intent(this, ClickerActivity::class.java))
+                    startActivity(
+                        Intent(
+                            this,
+                            ClickerActivity::class.java
+                        ).apply { putExtra("EXTRA_NUMBER", selectedMoon) })
                     mediaPlayer1.release()
                     mediaPlayer2.release()
                     soundPool?.release()

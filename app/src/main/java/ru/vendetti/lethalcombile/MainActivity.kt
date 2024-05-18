@@ -102,7 +102,7 @@ class MainActivity : ComponentActivity() {
 
     //Функция для задания графики (и ее логики) активити. Вызывалась выше в OnCreate
     @Composable
-    fun LoginAppScreen() {
+    private fun LoginAppScreen() {
         //Текст ответной информации, появляется как результат любого воздействия с терминалом
         var errorText by remember { mutableStateOf("") }
         //Состояние для хранения введённого текста

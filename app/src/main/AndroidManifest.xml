@@ -11,6 +11,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LethalCombile">
         <activity
+            android:name=".ClickerActivity"
+            android:exported="false"
+            android:label="@string/title_activity_clicker"
+            android:theme="@style/Theme.LethalCombile" />
+        <activity
             android:name=".GameActivity"
             android:exported="false"
             android:label="@string/title_activity_game"
