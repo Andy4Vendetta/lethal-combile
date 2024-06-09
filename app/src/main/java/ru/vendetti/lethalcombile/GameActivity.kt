@@ -79,11 +79,11 @@ class GameActivity : ComponentActivity() {
     private lateinit var mediaPlayer2: MediaPlayer
 
     //Игровая информация
-    private var quoteNeeded = 126
-    private var quoteGained = 0
-    private var cash = 35
-    private var quoteDays = 3
-    private var quoteNum = 1
+    private var quoteNeeded: Int? = 126
+    private var quoteGained: Int? = 0
+    private var cash: Int? = 35
+    private var quoteDays: Int? = 3
+    private var quoteNum: Int? = 1
 
     //Луны
     private var selectedMoon = 0
@@ -99,11 +99,21 @@ class GameActivity : ComponentActivity() {
     //Мутаблы
     private var upperPromptState = mutableStateOf(upperPrompt)
     private var promptState = mutableStateOf(prompt)
+
+    private var data: UserData? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         super.onStart()
-        database.setPersistenceEnabled(true)
-        //getUserData()
+        //database.setPersistenceEnabled(true)
+        getUserData()
+        val receivedNumber = intent.getIntExtra("EXTRA_NUMBER", 0)
+        cash = cash?.plus(receivedNumber)
+        data?.cash = cash!!
+        data?.quoteNeeded = quoteNeeded!!
+        data?.quoteGained = quoteGained!!
+        data?.quoteNum = quoteNum!!
+        data?.quoteDays = quoteDays!!
+        saveUserData()
         //Отрисовываем экран
         setContent { TerminalScreen() }
         //Инициируем пул звуков и предзагружаем их
@@ -391,7 +401,7 @@ class GameActivity : ComponentActivity() {
         return !isDestroyed && !isFinishing
     }
 
-    fun saveUserData(data: UserData) {
+    private fun saveUserData() {
         val uid = auth.currentUser?.uid ?: return
         val userRef = database.getReference("users").child(uid)
         userRef.setValue(data).addOnCompleteListener { task ->
@@ -403,12 +413,17 @@ class GameActivity : ComponentActivity() {
         }
     }
 
-    fun getUserData() {
+    private fun getUserData() {
         val uid = auth.currentUser?.uid ?: return
         val userRef = database.getReference("users").child(uid)
         userRef.get().addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                val data = task.result?.getValue(UserData::class.java)
+                data = task.result?.getValue(UserData::class.java)
+                cash = data?.cash
+                quoteNeeded = data?.quoteNeeded
+                quoteGained = data?.quoteGained
+                quoteNum = data?.quoteNum
+                quoteDays = data?.quoteDays
                 println("Retrieved data: $data")
             } else {
                 println("Failed to retrieve data: ${task.exception}")
